@@ -1,0 +1,48 @@
+---
+- name: Update and upgrade apt packages
+  ansible.builtin.apt:
+    upgrade: yes
+    update_cache: yes
+    cache_valid_time: 86400
+
+- name: Install unzip
+  ansible.builtin.apt:
+    pkg: unzip
+    state: present
+    update_cache: yes
+
+- name: Download awscliv2 installer
+  ansible.builtin.unarchive:
+    src: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    dest: /tmp
+    remote_src: true
+    creates: /tmp/aws
+
+- name: Run the AWS CLI installer
+  ansible.builtin.shell: "/tmp/aws/install --update"
+  args:
+    creates: /usr/local/bin/aws
+
+- name: Create .aws directory
+  ansible.builtin.file:
+    path: /home/malcolm/.aws
+    state: directory
+    owner: malcolm
+    group: malcolm
+    mode: '0700'
+
+- name: Template AWS config file
+  ansible.builtin.template:
+    src: config
+    dest: /home/malcolm/.aws/config
+    owner: malcolm
+    group: malcolm
+    mode: '0600'
+
+- name: Template AWS credentials file
+  ansible.builtin.template:
+    src: credentials
+    dest: /home/malcolm/.aws/credentials
+    owner: malcolm
+    group: malcolm
+    mode: '0600'
